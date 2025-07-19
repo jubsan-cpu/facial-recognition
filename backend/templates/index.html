@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RETRO EMOTION SCANNER</title>
+    <!-- Removed Bootstrap CSS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --retro-green: #33ff33;
+            --retro-black: #0a0a0a;
+            --retro-border: 1px solid var(--retro-green);
+        }
+        body {
+            background-color: var(--retro-black);
+            color: var(--retro-green);
+            font-family: 'VT323', monospace;
+            font-size: 18px; /* Pixel fonts often need larger size */
+            padding: 20px;
+            image-rendering: pixelated; /* Enhance pixelated look */
+        }
+        .container {
+            max-width: 700px; /* Limit width */
+            margin: 0 auto;
+            border: var(--retro-border);
+            padding: 15px;
+        }
+        h1 {
+            color: var(--retro-green);
+            text-align: center;
+            margin-bottom: 25px;
+            text-transform: uppercase; /* Classic terminal look */
+        }
+        .card { /* Replicate card structure simply */
+            border: var(--retro-border);
+            margin-bottom: 20px;
+            background-color: var(--retro-black); /* Ensure background matches */
+        }
+        .card-header {
+            background-color: var(--retro-black);
+            color: var(--retro-green);
+            padding: 8px 12px;
+            border-bottom: var(--retro-border);
+            text-transform: uppercase;
+            font-size: 1.1em;
+        }
+        .card-body {
+            padding: 15px;
+        }
+        label {
+            display: block; /* Make label take full width */
+            margin-bottom: 5px;
+        }
+        input[type="file"] {
+            display: block; /* Make input take full width */
+            margin-bottom: 15px;
+            color: var(--retro-green); /* Style file input text */
+            background-color: var(--retro-black);
+            border: var(--retro-border);
+            padding: 5px;
+        }
+        /* Style the file input button (browser specific, basic styling) */
+        input[type="file"]::file-selector-button {
+            background-color: var(--retro-green);
+            color: var(--retro-black);
+            border: none;
+            padding: 5px 10px;
+            font-family: 'VT323', monospace;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        button[type="submit"] {
+            background-color: var(--retro-green);
+            color: var(--retro-black);
+            border: none; /* Remove default border */
+            padding: 8px 15px;
+            font-family: 'VT323', monospace;
+            font-size: 1.1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: block; /* Make button block level */
+            width: 100%; /* Full width */
+        }
+        button[type="submit"]:hover {
+            background-color: #22cc22; /* Slightly darker green on hover */
+        }
+        #image-preview-container {
+            text-align: center;
+            margin-bottom: 20px;
+            border: var(--retro-border);
+            padding: 10px;
+        }
+        #uploaded-image {
+            max-width: 100%; /* Ensure image fits container */
+            max-height: 400px;
+            border: var(--retro-border); /* Add border to image */
+        }
+        #emotion-display { /* Keep using this ID for results card */
+           /* Styles defined in .card */
+        }
+        #emotion-results p { /* Style placeholder text */
+            color: #888; /* Dimmer green */
+        }
+        .emotion-item {
+            margin-bottom: 10px;
+        }
+        .emotion-label {
+            display: block; /* Simpler layout */
+            margin-bottom: 3px;
+        }
+        .emotion-bar {
+            height: 12px; /* Make bars chunkier */
+            background-color: #555; /* Default bar background */
+            border: 1px solid var(--retro-green);
+            width: 100%; /* Full width container */
+            position: relative;
+        }
+        /* Inner div for the actual colored bar */
+        .emotion-bar div {
+             height: 100%;
+             transition: width 0.3s ease;
+             position: absolute;
+             left: 0;
+             top: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Removed Bootstrap layout classes, using simpler structure -->
+    <div class="container">
+        <h1>RETRO EMOTION SCANNER v1.0</h1>
+        <div> <!-- Simplified layout container -->
+            <div class="card"> <!-- Upload Card -->
+                <div class="card-header">INPUT IMAGE</div>
+                <div class="card-body">
+                    <form id="upload-form">
+                        <div>
+                            <label for="image-upload">SELECT IMAGE FILE:</label>
+                            <input type="file" id="image-upload" accept="image/*" required>
+                        </div>
+                        <button type="submit">ANALYZE</button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="image-preview-container" style="display:none;">
+                <img id="uploaded-image">
+            </div>
+
+            <div id="emotion-display" class="card"> <!-- Results Card -->
+                <div class="card-header">ANALYSIS RESULTS</div>
+                <div class="card-body">
+                    <div id="emotion-results">
+                        <p>// WAITING FOR INPUT //</p>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- End simplified layout container -->
+    </div> <!-- End container -->
+
+    <!-- Removed unused canvas -->
+    <script>
+        // --- JavaScript remains largely the same, but update emotion bar rendering ---
+        const uploadForm = document.getElementById('upload-form');
+        const imageUpload = document.getElementById('image-upload');
+        const imagePreview = document.getElementById('uploaded-image');
+        const previewContainer = document.getElementById('image-preview-container');
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        let isProcessing = false;
+        
+        // Handle image upload
+        uploadForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (imageUpload.files.length === 0) return;
+            
+            const file = imageUpload.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                imagePreview.src = event.target.result;
+                previewContainer.style.display = 'block';
+                
+                // Process the uploaded image
+                const img = new Image();
+                img.onload = function() {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    // Create FormData and append the file
+                    const formData = new FormData();
+                    formData.append('file', file); // Use the original file object
+
+                    // Send to backend for processing
+                    fetch('/api/detect', {
+                        method: 'POST',
+                        body: formData // Send FormData directly
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.error) {
+                           console.error('Backend error:', data.error);
+                           alert('Error processing image: ' + data.error);
+                           return;
+                        }
+                        // Display processed image with wireframe
+                        displayProcessedImage(data.image);
+
+                        // Update emotion display
+                        updateEmotionDisplay(data.emotions);
+
+                        isProcessing = false;
+                    })
+                    .catch(err => {
+                        console.error('Error processing image:', err);
+                        alert('Failed to process image. Check console for details.');
+                        isProcessing = false;
+                    });
+                };
+                img.src = event.target.result; // Set src for the preview image object
+            };
+            reader.readAsDataURL(file); // Read the file for preview
+        });
+
+        // Display processed image with wireframe by updating the preview image src
+        function displayProcessedImage(imageData) {
+            // Update the source of the existing image preview element
+            imagePreview.src = imageData;
+        }
+        
+        // Emotion display update
+        function updateEmotionDisplay(emotions) {
+            if (!emotions || Object.keys(emotions).length === 0) {
+                document.getElementById('emotion-results').innerHTML = '<div>No face detected</div>';
+                return;
+            }
+            
+            const resultsDiv = document.getElementById('emotion-results');
+            resultsDiv.innerHTML = Object.entries(emotions)
+                .sort((a, b) => b[1] - a[1]) // Sort by intensity (highest first)
+                .map(([emotion, value]) => {
+                    // Create a visual intensity bar - DECLARE ONCE
+                    const barWidth = value; // Value is 0-100
+                    const barColor = getEmotionColor(emotion);
+
+                    // Use nested div for the bar fill
+                    return `
+                        <div class="emotion-item">
+                            <div class="emotion-label">${emotion}: ${value}%</div>
+                            <div class="emotion-bar">
+                                <div style="width: ${barWidth}%; background-color: ${barColor};"></div>
+                            </div>
+                        </div>
+                    `;
+                })
+                .join('');
+        }
+        
+        // Get color for emotion
+        function getEmotionColor(emotion) {
+            // Use brighter retro colors
+            const positiveEmotions = ['Happiness', 'Surprise']; // Match trained labels
+            const negativeEmotions = ['Anger', 'Disgust', 'Fear', 'Sadness']; // Match trained labels
+
+            if (positiveEmotions.includes(emotion)) {
+                return '#33ff33'; // Bright Green
+            } else if (negativeEmotions.includes(emotion)) {
+                return '#ff3333'; // Bright Red
+            } else { // Neutral
+                return '#ffff33'; // Bright Yellow
+            }
+        }
+    </script>
+</body>
+</html>

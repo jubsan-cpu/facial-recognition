@@ -1,0 +1,9 @@
+numpy==1.26.4
+opencv-python==4.9.0.80
+scikit-learn==1.3.0
+flask==3.0.0
+joblib==1.3.2
+tensorflow>=2.16.0,<2.17.0 # Updated to target 2.16.x
+matplotlib==3.8.2
+pandas==2.1.4
+kaggle==1.5.16
