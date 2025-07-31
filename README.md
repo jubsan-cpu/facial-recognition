@@ -83,7 +83,7 @@ Frontend (HTML/CSS/JS) <--> Flask Backend (Python) <--> Emotion Model (TensorFlo
    ```
 
 5. **Start using the web app**
-   - Open your browser and go to `http://localhost:5000`
+   - Open your browser and go to `http://localhost:*`
 
 ## Usage
 
